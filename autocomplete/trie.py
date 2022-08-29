@@ -33,8 +33,11 @@ class Trie:
     The root node does not store any values.
     """
 
-    def __init__(self):
+    def __init__(self, keys: list[str] | None = None):
         self.root = TrieNode("")
+        if keys is not None:
+            for k in keys:
+                self.insert(k)
 
     def __rich__(self) -> str:
         """Return a representation of this Trie for rich printing."""
@@ -100,11 +103,14 @@ class Trie:
         prefix : str
             The query prefix to search the trie.
         """
+        output = []
         if node.is_end:
-            self.output.append((prefix + node.value, node.counter))
+            output.append((prefix + node.value, node.counter))
 
         for child in node.children.values():
-            self._traverse_remaining_words(child, prefix + node.value)
+            output.extend(self._traverse_remaining_words(child, prefix + node.value))
+
+        return output
 
     def search(self, prefix: str):
         """Search for a prefix in the Trie and return all words that contain the prefix.
@@ -119,9 +125,6 @@ class Trie:
         list
             All words that contain the prefix.
         """
-        # Use a variable within the class to keep all possible outputs
-        # As there can be more than one word with such prefix
-        self.output = []
         node = self.root
 
         # Check if the prefix is in the trie
@@ -133,7 +136,24 @@ class Trie:
                 return []
 
         # Traverse the trie to get all candidates
-        self._traverse_remaining_words(node, prefix[:-1])
+        output = self._traverse_remaining_words(node, prefix[:-1])
 
         # Sort the results in reverse order and return
-        return sorted(self.output, key=lambda x: x[1], reverse=True)
+        return sorted(output, key=lambda x: x[1], reverse=True)
+
+    def query(self, prefix: str) -> list:
+        """Display the trie search results in a format that's easy to read.
+
+        Parameters
+        ----------
+        prefix : str
+            The query prefix.
+
+        Returns
+        -------
+        list
+            The words that contain this prefix.
+        """
+        raw = self.search(prefix)
+        output = "\t".join([result[0] for result in raw])
+        return output
